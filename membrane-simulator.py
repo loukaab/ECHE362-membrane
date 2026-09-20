@@ -76,13 +76,16 @@ def membrane_stage(F, z, A, perm_O2, alpha, PR, PP=14.7):
         "stage_cut": VP / F,
     }
 
+new_area = 2500 # m^2
+new_perm = 0.0285 # O2 permeance
+new_alpha = 6.3025 # Selectivity
 
 stage1 = membrane_stage(14285, 0.209, 4000, 0.031, 5.5, 115)
 stage2 = membrane_stage(stage1["retentate_flow"], stage1["retentate_O2"], 4000, 0.031, 5.5, 115)
 stage3 = membrane_stage(stage2["retentate_flow"], stage2["retentate_O2"], 4000, 0.031, 5.5, 115)
-new = membrane_stage(stage3["retentate_flow"], stage3[retentate_O2], 2500, )
+new = membrane_stage(stage3["retentate_flow"], stage3["retentate_O2"], new_area, new_perm, new_alpha, 115)
 
-stages = [stage1, stage2, stage3]
+stages = [stage1, stage2, stage3, new]
 
 stagedf = pd.DataFrame([
     {"stage": i, **stage}
