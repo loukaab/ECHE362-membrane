@@ -1,0 +1,5 @@
+# Tkinter comes from the OS Python distribution, not pip.
+# These scientific packages already exist in the project's .venv.
+numpy
+scipy
+pandas
