@@ -1,0 +1,347 @@
+{
+  "version": 3,
+  "name": "OOON design basis",
+  "equipment": [
+    {
+      "id": "F-1",
+      "name": "Air feed",
+      "kind": "feed",
+      "properties": {
+        "flow_slpm": 17200.0,
+        "oxygen": 0.209,
+        "pressure_psia": 14.7
+      },
+      "x": 23.049004196871422,
+      "y": 20,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "C-1",
+      "name": "C-1",
+      "kind": "compressor",
+      "properties": {
+        "rpm": 4500,
+        "mode": "flow",
+        "flow_slpm": 17200.0,
+        "outlet_pressure_psia": null
+      },
+      "x": 280,
+      "y": 300,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 8.857699437495512,
+      "label_dy": -64.4218561370028
+    },
+    {
+      "id": "M-1",
+      "name": "M-1",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 673.3575229653978,
+      "y": 283.14579637836414,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "M-2",
+      "name": "M-2",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 1069.122789305315,
+      "y": 275.9225662548059,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "M-3",
+      "name": "M-3",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 186.99219415927607,
+      "y": 869.6194243668481,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": -21.669690370674743,
+      "label_dy": -11.53418131658509
+    },
+    {
+      "id": "M-4",
+      "name": "M-4",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 2500.0,
+        "alpha": 5.976608187134502,
+        "oxygen_permeance": 0.018390162805594107,
+        "preset": "N",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 578.8490639266647,
+      "y": 878.8700091128399,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 54.17422592668686,
+      "label_dy": -15.145796378364139
+    }
+  ],
+  "connections": [
+    {
+      "id": "S-2",
+      "name": "S-2",
+      "source_node": "C-1",
+      "source_port": "outlet",
+      "target_node": "M-1",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -11.236135747757203,
+      "label_dy": 145.86911943963446
+    },
+    {
+      "id": "P-1",
+      "name": "O2 product",
+      "source_node": "M-1",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "oxygen",
+      "endpoint": [
+        750.0,
+        590.0
+      ],
+      "waypoints": [
+        [
+          758.3575229653978,
+          484.57289818918207
+        ],
+        [
+          750.0,
+          510.0
+        ],
+        [
+          750.0,
+          530.0
+        ],
+        [
+          750.0,
+          540.0
+        ]
+      ],
+      "label_dx": -212.2980476123704,
+      "label_dy": 24.077433745194128
+    },
+    {
+      "id": "S-3",
+      "name": "S-3",
+      "source_node": "M-1",
+      "source_port": "retentate",
+      "target_node": "M-2",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": 10.834845185337372,
+      "label_dy": 136.0375006603469
+    },
+    {
+      "id": "P-2",
+      "name": "Vent 1",
+      "source_node": "M-2",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "vent",
+      "endpoint": [
+        1150.0,
+        610.0
+      ],
+      "waypoints": [
+        [
+          1154.122789305315,
+          480.9612831274029
+        ],
+        [
+          1150.0,
+          480.9612831274029
+        ],
+        [
+          1150.0,
+          540.0
+        ]
+      ],
+      "label_dx": -8.62774709202813,
+      "label_dy": 4.61484146782891
+    },
+    {
+      "id": "S-4",
+      "name": "S-4",
+      "source_node": "M-2",
+      "source_port": "retentate",
+      "target_node": "M-3",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [
+        [
+          1470.0,
+          320.0
+        ],
+        [
+          1470.0,
+          620.0
+        ],
+        [
+          50.0,
+          630.0
+        ],
+        [
+          50.0,
+          910.0
+        ],
+        [
+          173.3343804967767,
+          910.0
+        ]
+      ],
+      "label_dx": 838.4966301763858,
+      "label_dy": 446.2351054109314
+    },
+    {
+      "id": "P-3",
+      "name": "Vent 2",
+      "source_node": "M-3",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "vent",
+      "endpoint": [
+        270.0,
+        1110.0
+      ],
+      "waypoints": [],
+      "label_dx": -271.5288036379548,
+      "label_dy": 12.759096308120036
+    },
+    {
+      "id": "S-5",
+      "name": "S-5",
+      "source_node": "M-3",
+      "source_port": "retentate",
+      "target_node": "M-4",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [
+        [
+          490.0,
+          910.0
+        ],
+        [
+          550.0,
+          920.0
+        ]
+      ],
+      "label_dx": 7.223230123558267,
+      "label_dy": 144.66524775237474
+    },
+    {
+      "id": "P-4",
+      "name": "Vent 3",
+      "source_node": "M-4",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "vent",
+      "endpoint": [
+        660.0,
+        1090.0
+      ],
+      "waypoints": [],
+      "label_dx": 2.240528891846907,
+      "label_dy": 71.02286783023072
+    },
+    {
+      "id": "S-1",
+      "name": "Fresh air",
+      "source_node": "F-1",
+      "source_port": "outlet",
+      "target_node": "C-1",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -143.01538730113856,
+      "label_dy": 475.0256089656265
+    },
+    {
+      "id": "R-4",
+      "name": "N2 product",
+      "source_node": "M-4",
+      "source_port": "retentate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "nitrogen",
+      "endpoint": [
+        1310.0,
+        920.0
+      ],
+      "waypoints": [
+        [
+          1014.4245319633324,
+          921.8700091128399
+        ],
+        [
+          1014.4245319633324,
+          920.0
+        ],
+        [
+          1280.0,
+          920.0
+        ]
+      ],
+      "label_dx": 64.92827497472672,
+      "label_dy": 11.2918739086482
+    }
+  ],
+  "annotations": [
+    {
+      "id": "TXT-1",
+      "text": "126 kW",
+      "x": 277.4958897113977,
+      "y": 238.54909817295595,
+      "width": 160,
+      "font_size": 11,
+      "bold": false,
+      "color": "#243b55"
+    }
+  ],
+  "legend": {
+    "x": 1479.9962699441332,
+    "y": -96.75068298401132
+  }
+}

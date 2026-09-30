@@ -1,0 +1,221 @@
+{
+  "version": 3,
+  "name": "Untitled flowsheet",
+  "equipment": [
+    {
+      "id": "F-1",
+      "name": "F-1",
+      "kind": "feed",
+      "properties": {
+        "flow_slpm": 14285.0,
+        "oxygen": 0.209,
+        "pressure_psia": 14.7
+      },
+      "x": 34.54545454545455,
+      "y": 198.18181818181816,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "M-1",
+      "name": "M-1",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 698.1646330984706,
+      "y": 201.01391991751154,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "M-2",
+      "name": "M-2",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 1063.9010139199174,
+      "y": 199.99999999999994,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 0.0,
+      "label_dy": -32.0
+    },
+    {
+      "id": "M-3",
+      "name": "M-3",
+      "kind": "membrane",
+      "properties": {
+        "area_m2": 4000.0,
+        "alpha": 5.5,
+        "oxygen_permeance": 0.031,
+        "preset": "O",
+        "permeate_pressure_psia": 14.7
+      },
+      "x": 289.0909090909092,
+      "y": 730.0,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": 13.636363636363626,
+      "label_dy": -7.454545454545439
+    },
+    {
+      "id": "C-1",
+      "name": "C-1",
+      "kind": "compressor",
+      "properties": {
+        "rpm": 3500,
+        "mode": "flow",
+        "flow_slpm": 14285.0,
+        "outlet_pressure_psia": null
+      },
+      "x": 380.21996906685,
+      "y": 199.74222374978518,
+      "width": 170.0,
+      "height": 86.0,
+      "label_dx": -20.27839835023201,
+      "label_dy": -27.944320329953598
+    }
+  ],
+  "connections": [
+    {
+      "id": "S-2",
+      "name": "S-2",
+      "source_node": "M-1",
+      "source_port": "retentate",
+      "target_node": "M-2",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": 4.545454545454504,
+      "label_dy": 154.54545454545453
+    },
+    {
+      "id": "S-3",
+      "name": "S-3",
+      "source_node": "M-2",
+      "source_port": "retentate",
+      "target_node": "M-3",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [
+        [
+          1330.0,
+          242.99999999999994
+        ],
+        [
+          1330.0,
+          560.0
+        ],
+        [
+          120.0,
+          560.0
+        ],
+        [
+          120.0,
+          770.0
+        ]
+      ],
+      "label_dx": -486.3636363636364,
+      "label_dy": 464.54545454545445
+    },
+    {
+      "id": "P-1",
+      "name": "O\u2082 product",
+      "source_node": "M-1",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "oxygen",
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -152.72727272727275,
+      "label_dy": 20.909090909090878
+    },
+    {
+      "id": "V-1",
+      "name": "Purge / vent",
+      "source_node": "M-2",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "vent",
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -181.81818181818176,
+      "label_dy": 25.45454545454544
+    },
+    {
+      "id": "P-2",
+      "name": "N\u2082 product",
+      "source_node": "M-3",
+      "source_port": "retentate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "nitrogen",
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": 181.49166523457643,
+      "label_dy": 88.21103282350919
+    },
+    {
+      "id": "V-2",
+      "name": "Purge / vent",
+      "source_node": "M-3",
+      "source_port": "permeate",
+      "target_node": null,
+      "target_port": null,
+      "outlet": "vent",
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -263.6363636363636,
+      "label_dy": -23.636363636363626
+    },
+    {
+      "id": "S-1",
+      "name": "S-1",
+      "source_node": "F-1",
+      "source_port": "outlet",
+      "target_node": "C-1",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -16.222718680185608,
+      "label_dy": 148.0323079566936
+    },
+    {
+      "id": "S-4",
+      "name": "S-4",
+      "source_node": "C-1",
+      "source_port": "outlet",
+      "target_node": "M-1",
+      "target_port": "inlet",
+      "outlet": null,
+      "endpoint": null,
+      "waypoints": [],
+      "label_dx": -9.125279257604348,
+      "label_dy": 147.018388039182
+    }
+  ],
+  "annotations": [],
+  "legend": {
+    "x": 1747.272727272727,
+    "y": 162.72727272727275
+  }
+}
