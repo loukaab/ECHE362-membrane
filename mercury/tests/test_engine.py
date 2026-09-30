@@ -66,6 +66,46 @@ class EngineTests(unittest.TestCase):
                 broken.save("Safe", custom)
             self.assertEqual(store.path.read_text(), '{invalid')
 
+    def test_temperature_assumption_propagation_and_power(self):
+        sheet = default_flowsheet(self.presets)
+        baseline = sheet.simulate(self.map)
+        for temperature in (25, 21.5, -10):
+            with self.subTest(temperature=temperature):
+                sheet.temperature_c = temperature
+                result = sheet.simulate(self.map)
+                streams = list(result.streams.values())
+                for equipment in result.equipment.values():
+                    streams.extend(equipment.inlets.values())
+                    streams.extend(equipment.outlets.values())
+                self.assertEqual({s.temperature_c for s in streams}, {temperature})
+                for key, stream in result.streams.items():
+                    self.assertEqual(stream.flow_slpm, baseline.streams[key].flow_slpm)
+                    self.assertEqual(stream.oxygen, baseline.streams[key].oxygen)
+                self.assertAlmostEqual(result.equipment['C-1'].ideal_power_kw,
+                                       94.55081992160665 * (temperature + 273.15) / 298.15)
+
+    def test_temperature_persistence_and_validation(self):
+        sheet = default_flowsheet(self.presets)
+        sheet.temperature_c = 25.5
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'temperature.json'
+            sheet.save(path)
+            self.assertEqual(Flowsheet.load(path).temperature_c, 25.5)
+        legacy = sheet.to_dict()
+        del legacy['temperature_c']
+        for version in (1, 2, 3):
+            legacy['version'] = version
+            self.assertEqual(Flowsheet.from_dict(legacy).temperature_c, 21)
+        for value in (-273.15, -300, float('nan'), float('inf'), True, '25', None):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    sheet.temperature_c = value
+                self.assertEqual(sheet.temperature_c, 25.5)
+                with self.assertRaises(ValueError):
+                    Stream.binary('air', 100, .209, 14.7, temperature_c=value)
+                with self.assertRaises(ValueError):
+                    Flowsheet.from_dict({**sheet.to_dict(), 'temperature_c': value})
+
     def test_compressor_interpolation_and_inverse(self):
         for rpm in self.map.speeds:
             low, high = self.map.limits(rpm)
@@ -159,7 +199,7 @@ class EngineTests(unittest.TestCase):
         with self.assertRaisesRegex(SimulationError,'Recycle'): s.topological_order()
 
     def test_split_mix_and_pressure_mismatch(self):
-        s=Flowsheet()
+        s=Flowsheet(temperature_c=25.5)
         for node in [Equipment('F','F','feed',FeedProperties(10000,.209,100)),
                      Equipment('S','S','splitter',SplitterProperties(.3)),
                      Equipment('X','X','mixer',EmptyProperties()),
@@ -170,6 +210,7 @@ class EngineTests(unittest.TestCase):
         self.assertAlmostEqual(r.streams['2'].flow_slpm,3000)
         self.assertAlmostEqual(r.products['P'].stream.flow_slpm,10000)
         self.assertAlmostEqual(r.products['P'].stream.oxygen,.209)
+        self.assertEqual({stream.temperature_c for stream in r.streams.values()}, {25.5})
         s.delete('3')
         s.add(Equipment('F2','F2','feed',FeedProperties(3000,.5,99)))
         s.add(Equipment('V','V','vent',EmptyProperties()))

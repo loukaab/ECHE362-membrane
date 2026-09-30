@@ -61,7 +61,7 @@ class ResultsPanel(ttk.Notebook):
             check=lambda value: '—' if value is None else 'PASS' if value else 'UNMET'
             tag='pass' if product.passed else 'fail' if product.passed is False else ''
             self.table.insert('', 'end',iid=key,values=(product.name,product.role,f'{s.flow_slpm:,.3f}',
-                              f'{100*s.oxygen:.4f}',f'{100*(1-s.oxygen):.4f}',f'{s.temperature_c:.0f}',f'{s.pressure_psia:.3f}',
+                              f'{100*s.oxygen:.4f}',f'{100*(1-s.oxygen):.4f}',f'{s.temperature_c:g}',f'{s.pressure_psia:.3f}',
                               check(product.flow_met),check(product.composition_met)),tags=(tag,))
         self.messages.insert('end',f'External flow balance error: {result.flow_balance_error_slpm:.3g} slpm; '
                              f'O2 balance error: {result.oxygen_balance_error_slpm:.3g} slpm')

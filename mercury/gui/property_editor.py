@@ -13,7 +13,7 @@ from mercury.simulation.units import psia_to_psig
 
 
 def stream_text(stream) -> str:
-    return (f"Temperature {stream.temperature_c:.0f} °C (assumed)\n"
+    return (f"Temperature {stream.temperature_c:g} °C (assumed)\n"
             f"Flow       {stream.flow_slpm:,.3f} slpm\n"
             f"O2 fraction {stream.oxygen:.6f} mol/mol\n"
             f"O2          {100*stream.oxygen:.4f} mol%\n"

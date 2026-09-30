@@ -199,6 +199,58 @@ class GuiTests(unittest.TestCase):
         self.assertIn('0.419026',app.editor.result_text.get('1.0','end'))
         self.assertEqual(app.result.products['P-1'].stream.temperature_c,21)
 
+    def test_temperature_edit_results_and_persistence(self):
+        app = self.app
+        self.run_and_wait()
+        app.select('F-1')
+        app.editor.variables['name'].set('Edited feed')
+        app.temperature_var.set('25.5')
+        app.apply_temperature()
+        self.assertEqual(app.sheet.nodes['F-1'].name, 'Edited feed')
+        self.assertEqual(app.sheet.temperature_c, 25.5)
+        self.assertIsNone(app.result)
+        self.assertTrue(app.dirty)
+        edge = app.sheet.connections['P-1']
+        self.assertEqual(app.workspace.stream_label(edge).splitlines()[0], '25.5')
+        canvas = app.workspace.canvas
+        texts = [canvas.itemcget(item, 'text') for item in canvas.find_all()
+                 if canvas.type(item) == 'text']
+        self.assertIn('Temperature assumed: 25.5 °C', texts)
+        self.run_and_wait()
+        app.select('P-1')
+        self.assertIn('25.5 °C (assumed)', app.editor.result_text.get('1.0', 'end'))
+        self.assertEqual(app.results_panel.table.set('P-1', 'temperature'), '25.5')
+        app.temperature_var.set('24.25')
+        app.file_path = Path(self.temp.name) / 'temperature.json'
+        app.save()  # Save applies a pending temperature edit.
+        self.assertEqual(Flowsheet.load(app.file_path).temperature_c, 24.25)
+        app.load_path(app.file_path)
+        self.assertEqual(app.temperature_var.get(), '24.25')
+        app.temperature_var.set('22.5')
+        self.run_and_wait()  # Run applies a pending edit, too.
+        self.assertEqual(app.result.products['P-1'].stream.temperature_c, 22.5)
+        app._set_busy(True)
+        self.assertEqual(str(app.temperature_entry.cget('state')), 'disabled')
+        app._set_busy(False)
+        app._replace_sheet(Flowsheet())
+        self.assertEqual(app.temperature_var.get(), '21')
+
+    def test_invalid_and_unsaved_temperature(self):
+        app = self.app
+        self.run_and_wait()
+        previous = app.result
+        for value in ('', 'abc', 'nan', 'inf', '-273.15', '-300'):
+            app.temperature_var.set(value)
+            self.assertFalse(app.validate())
+            self.assertEqual(app.sheet.temperature_c, 21)
+            self.assertIs(app.result, previous)
+            self.assertIn('Invalid temperature', app.status.get())
+        app.temperature_var.set('25')
+        app.dirty = False
+        with patch('mercury.gui.main_window.messagebox.askyesno', return_value=False) as confirm:
+            self.assertFalse(app._confirm_discard())
+            confirm.assert_called_once()
+
     def test_context_add_outlet_role_and_empty_workspace_presets(self):
         app=self.app
         app.select('P-1'); app.delete_selected()

@@ -15,7 +15,7 @@ from mercury.simulation import (
 from mercury.simulation.flowsheet import SimulationError, ValidationIssue
 from mercury.simulation.models import SimulationResult, validate_properties, TextAnnotation, LEGEND_ID
 from mercury.simulation.numerics import PROJECT_ROOT
-from mercury.simulation.units import psia_to_psig
+from mercury.simulation.units import psia_to_psig, validate_temperature_c
 from .property_editor import PropertyEditor
 from .results_panel import ResultsPanel
 from .workspace import Workspace, OUTLET_LABELS
@@ -102,6 +102,15 @@ class MainWindow:
         self._button(operations,'Delete Selected',self.delete_selected)
         self._button(operations,'Clear',self.clear)
         self._button(operations,'Restore Default',self.restore_default)
+        assumptions=ttk.Frame(shell)
+        assumptions.pack(fill='x',pady=(0,8))
+        ttk.Label(assumptions,text='Assumed temperature (°C):').pack(side='left',padx=(0,8))
+        self.temperature_var=tk.StringVar(value=str(self.sheet.temperature_c).removesuffix('.0'))
+        self.temperature_entry=ttk.Entry(assumptions,textvariable=self.temperature_var,width=10)
+        self.temperature_entry.pack(side='left',padx=(0,8))
+        self.temperature_entry.bind('<Return>',lambda event:self.apply_temperature())
+        self._button(assumptions,'Apply temperature',self.apply_temperature)
+        ttk.Label(assumptions,text='All streams and compressor inlet power.',foreground='#64758a').pack(side='left')
         view=ttk.Frame(shell)
         view.pack(fill='x',pady=(0,10))
         ttk.Label(view,text='Stream labels:').pack(side='left',padx=(0,8))
@@ -408,17 +417,34 @@ class MainWindow:
         self._refresh()
 
     def _commit_editor(self):
-        if not self.editor.object: return True
         try:
-            name,p=self.editor.collect()
-            obj=self.selected_object()
-            if obj and self.editor.has_changes():
-                self.apply_selected(name,p)
-            return True
+            temperature=validate_temperature_c(float(self.temperature_var.get()))
+        except ValueError as error:
+            self.set_status(f'Invalid temperature: {error}')
+            self.temperature_entry.focus_set()
+            return False
+        try:
+            if self.editor.object:
+                name,p=self.editor.collect()
+                obj=self.selected_object()
+                if obj and self.editor.has_changes():
+                    self.apply_selected(name,p)
         except (ValueError,TypeError) as error:
             self.editor.error.set(str(error))
             self.set_status('Correct the selected object’s inputs before continuing.')
             return False
+        if temperature != self.sheet.temperature_c:
+            self.sheet.temperature_c=temperature
+            self._invalidate()
+            self._refresh()
+        self.temperature_var.set(str(temperature).removesuffix('.0'))
+        return True
+
+    def apply_temperature(self):
+        if self.busy: return
+        if self._commit_editor():
+            self.set_status(f'Assumed temperature set to {self.sheet.temperature_c:g} °C for all streams. '
+                            'Run Simulation to update calculated results.')
 
     def compressor_preview(self,key,p):
         low,high=self.compressor_map.limits(p.rpm)
@@ -471,6 +497,7 @@ class MainWindow:
         self.workspace.busy=busy
         self.editor.set_busy(busy)
         self.preset_combo.configure(state='disabled' if busy else 'readonly')
+        self.temperature_entry.configure(state='disabled' if busy else 'normal')
         for button in self.buttons: button.state(['disabled'] if busy else ['!disabled'])
         self.run_button.configure(text='Running…' if busy else '▶ Run Simulation')
 
@@ -517,10 +544,13 @@ class MainWindow:
         self.set_status('Calculated results cleared; equipment and connections are unchanged.')
 
     def _confirm_discard(self):
-        pending=False
+        try:
+            pending=float(self.temperature_var.get()) != self.sheet.temperature_c
+        except ValueError:
+            pending=True
         if self.editor.object:
             try:
-                pending=self.editor.has_changes()
+                pending=pending or self.editor.has_changes()
             except (ValueError,TypeError): pending=True
         return not (self.dirty or pending) or messagebox.askyesno('Unsaved flowsheet',
             'Discard unsaved changes to this flowsheet?',parent=self.root)
@@ -528,6 +558,7 @@ class MainWindow:
     def _replace_sheet(self,sheet,path=None):
         self.context_menus.dismiss()
         self.sheet=sheet
+        self.temperature_var.set(str(sheet.temperature_c).removesuffix('.0'))
         self.file_path=path
         self.selected=None
         self.result=None

@@ -16,6 +16,13 @@ def psia_to_psig(pressure: float) -> float:
     return finite(pressure, "Pressure") - ATM_PSIA
 
 
+def validate_temperature_c(value: float) -> float:
+    value = finite(value, "Temperature (°C)")
+    if value <= -273.15:
+        raise ValueError("Temperature must be above absolute zero (−273.15 °C)")
+    return value
+
+
 def psig_to_psia(pressure: float) -> float:
     return finite(pressure, "Pressure") + ATM_PSIA
 

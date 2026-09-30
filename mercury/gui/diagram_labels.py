@@ -10,9 +10,9 @@ METRICS = ("temperature", "pressure", "flow", "oxygen")
 UNITS = ("Temperature (°C)", "Pressure (psia)", "Flow (slpm)", "O₂ fraction (mol/mol)")
 
 
-def stream_values(edge, result, fields):
+def stream_values(edge, result, fields, temperature_c=21.0):
     stream = result.streams.get(edge.id) if result else None
-    values = ("21", f"{stream.pressure_psia:.2f}" if stream else "—",
+    values = (f"{stream.temperature_c if stream else temperature_c:g}", f"{stream.pressure_psia:.2f}" if stream else "—",
               f"{stream.flow_slpm:,.0f}" if stream else "—",
               f"{stream.oxygen:.4f}" if stream else "—")
     return [(key, value) for key, value in zip(METRICS, values) if key in fields]
@@ -73,10 +73,10 @@ class DiagramLabels:
             text = text[:-1]
         return text+"…"
 
-    def stream(self, x, y, edge, result, fields, color, anchor, scale):
+    def stream(self, x, y, edge, result, fields, color, anchor, scale, temperature_c=21.0):
         c, font = self.canvas, self.font(scale)
         hit = ("stream_label", edge.id)
-        values = stream_values(edge, result, fields)
+        values = stream_values(edge, result, fields, temperature_c)
         row_height = font.metrics("linespace")+2
         widths = [max(36, font.measure(value)+max(24,row_height+4)) for _,value in values]
         name_width = max(80, round(120*scale))
@@ -97,12 +97,12 @@ class DiagramLabels:
         if product and product.passed is False:
             self.warning(left+width+4,top+height-14,hit)
 
-    def legend(self, position, scale, selected=False):
+    def legend(self, position, scale, selected=False, temperature_c=21.0):
         c, font = self.canvas, self.font(scale)
         x, y = position.x*scale, position.y*scale
         row = font.metrics("linespace")+8
         sample_width = 40
-        note = "Temperature assumed: 21 °C"
+        note = f"Temperature assumed: {temperature_c:g} °C"
         warning_text = "Product specification unmet"
         text_width = max(font.measure(s) for s in (*UNITS,warning_text))
         width = max(sample_width+text_width+28, font.measure(note)+20)

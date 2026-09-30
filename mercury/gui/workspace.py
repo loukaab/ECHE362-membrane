@@ -93,7 +93,8 @@ class Workspace(ttk.Frame):
         return [p for i, p in enumerate(points) if not i or p != points[i-1]]
 
     def stream_label(self, edge):
-        return "\n".join([value for _,value in stream_values(edge,self.result,self.label_fields)] + [edge.name])
+        return "\n".join([value for _,value in stream_values(edge,self.result,self.label_fields,
+                                                           self.sheet.temperature_c)] + [edge.name])
 
     def _label(self, x, y, text, hit, width=210, color="#243b55", anchor="center"):
         c = self.canvas
@@ -130,7 +131,7 @@ class Workspace(ttk.Frame):
             else:
                 lx, ly, anchor = (sx+tx)/2, min(sy, ty)-160, "s"
             self.labels.stream((lx+edge.label_dx)*scale, (ly+edge.label_dy)*scale,
-                               edge,self.result,self.label_fields,color,anchor,scale)
+                               edge,self.result,self.label_fields,color,anchor,scale,self.sheet.temperature_c)
             if edge.id == self.selected:
                 for i, (x, y) in enumerate(points[1:-1]):
                     h = c.create_rectangle(x*scale-5, y*scale-5, x*scale+5, y*scale+5,
@@ -194,7 +195,7 @@ class Workspace(ttk.Frame):
                                               text={"permeate": "P", "retentate": "R"}.get(port, port.upper()),
                                               font=("TkDefaultFont", 8), fill="#4d6078")
                         self.items[label] = ("port", node.id, port, output)
-        self.labels.legend(self.sheet.legend, scale, self.selected == LEGEND_ID)
+        self.labels.legend(self.sheet.legend, scale, self.selected == LEGEND_ID, self.sheet.temperature_c)
         for annotation in self.sheet.annotations.values():
             x,y,w = annotation.x*scale,annotation.y*scale,annotation.width*scale
             text = c.create_text(x,y,anchor="nw",text=annotation.text if annotation.text.strip() else "[Text]",width=w,

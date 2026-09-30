@@ -5,7 +5,7 @@ from typing import TypeAlias
 import math
 import re
 
-from .units import ATM_PSIA, finite
+from .units import ATM_PSIA, finite, validate_temperature_c
 
 
 @dataclass(frozen=True)
@@ -14,8 +14,10 @@ class Stream:
     flow_slpm: float
     pressure_psia: float
     composition: dict[str, float]
+    temperature_c: float = 21.0  # Assumed uniform temperature; no energy balance.
 
     def __post_init__(self) -> None:
+        validate_temperature_c(self.temperature_c)
         if finite(self.flow_slpm, "Flow (slpm)") < 0:
             raise ValueError("Flow must be nonnegative")
         if finite(self.pressure_psia, "Pressure (psia)") <= 0:
@@ -30,17 +32,13 @@ class Stream:
         object.__setattr__(self, "composition", dict(self.composition))
 
     @classmethod
-    def binary(cls, name: str, flow_slpm: float, oxygen: float, pressure_psia: float) -> "Stream":
-        return cls(name, flow_slpm, pressure_psia, {"O2": oxygen, "N2": 1 - oxygen})
+    def binary(cls, name: str, flow_slpm: float, oxygen: float, pressure_psia: float,
+               temperature_c: float = 21.0) -> "Stream":
+        return cls(name, flow_slpm, pressure_psia, {"O2": oxygen, "N2": 1 - oxygen}, temperature_c)
 
     @property
     def oxygen(self) -> float:
         return self.composition["O2"]
-
-    @property
-    def temperature_c(self) -> float:
-        """Display assumption only: this material model has no energy balance."""
-        return 21.0
 
 
 @dataclass(frozen=True)

@@ -13,7 +13,7 @@ from .models import (
 )
 from .numerics import CompressorMap, checked_membrane, ideal_compressor_power
 from .persistence import read_json, write_json
-from .units import RESIDUAL_TOLERANCE, close
+from .units import RESIDUAL_TOLERANCE, close, validate_temperature_c
 
 
 @dataclass(frozen=True)
@@ -32,12 +32,21 @@ class SimulationError(ValueError):
 
 
 class Flowsheet:
-    def __init__(self, name: str = "Untitled flowsheet"):
+    def __init__(self, name: str = "Untitled flowsheet", temperature_c: float = 21.0):
         self.name = name
+        self.temperature_c = temperature_c
         self.nodes: dict[str, Equipment] = {}
         self.connections: dict[str, Connection] = {}
         self.annotations: dict[str, TextAnnotation] = {}
         self.legend = LegendPosition()
+
+    @property
+    def temperature_c(self) -> float:
+        return self._temperature_c
+
+    @temperature_c.setter
+    def temperature_c(self, value: float) -> None:
+        self._temperature_c = validate_temperature_c(value)
 
     def object_ids(self) -> set[str]:
         return set(self.nodes) | set(self.connections) | set(self.annotations) | {LEGEND_ID}
@@ -269,7 +278,8 @@ class Flowsheet:
             outlets = {}
             try:
                 if node.kind == "feed":
-                    outlets["outlet"] = Stream.binary(node.name, p.flow_slpm, p.oxygen, p.pressure_psia)
+                    outlets["outlet"] = Stream.binary(node.name, p.flow_slpm, p.oxygen, p.pressure_psia,
+                                                       self.temperature_c)
                     feeds.append(outlets["outlet"])
                 elif node.kind == "membrane":
                     feed = inlets["inlet"]
@@ -277,7 +287,7 @@ class Flowsheet:
                     for port in ("retentate", "permeate"):
                         outlets[port] = Stream.binary(node.name + " " + port, calculated[port + "_flow"],
                                                        calculated[port + "_O2"], feed.pressure_psia if port == "retentate"
-                                                       else p.permeate_pressure_psia)
+                                                       else p.permeate_pressure_psia, self.temperature_c)
                     equipment_result.stage_cut = calculated["stage_cut"]
                     if not 0.20 <= calculated["stage_cut"] <= 0.40:
                         result.warnings.append(f"{node.name}: stage cut {calculated['stage_cut']:.4f} "
@@ -289,7 +299,8 @@ class Flowsheet:
                         compressor_map.inverse(p.outlet_pressure_psia, p.rpm, feed.pressure_psia)
                     self._check_compressor_target(p, feed.flow_slpm, calculated["p_out"])
                     outlets["outlet"] = replace(feed, name=node.name + " outlet", pressure_psia=calculated["p_out"])
-                    equipment_result.ideal_power_kw = ideal_compressor_power(feed.flow_slpm, calculated["p_ratio"])
+                    equipment_result.ideal_power_kw = ideal_compressor_power(
+                        feed.flow_slpm, calculated["p_ratio"], T_in=feed.temperature_c + 273.15)
                 elif node.kind == "splitter":
                     feed = inlets["inlet"]
                     outlets = {"a": replace(feed, name=node.name + " a", flow_slpm=feed.flow_slpm * p.fraction),
@@ -303,7 +314,8 @@ class Flowsheet:
                     if flow <= 0:
                         raise ValueError("Mixer requires positive combined flow")
                     oxygen = (a.flow_slpm * a.oxygen + b.flow_slpm * b.oxygen) / flow
-                    outlets["outlet"] = Stream.binary(node.name + " outlet", flow, oxygen, a.pressure_psia)
+                    outlets["outlet"] = Stream.binary(node.name + " outlet", flow, oxygen, a.pressure_psia,
+                                                       self.temperature_c)
                 elif node.kind == "product":
                     result.products[key] = evaluate_product(node.name, p.role, inlets["inlet"])
                 elif node.kind == "vent":
@@ -335,6 +347,7 @@ class Flowsheet:
 
     def to_dict(self) -> dict:
         return {"version": 3, "name": self.name,
+                "temperature_c": self.temperature_c,
                 "equipment": [asdict(node) for node in self.nodes.values()],
                 "connections": [asdict(c) for c in self.connections.values()],
                 "annotations": [asdict(a) for a in self.annotations.values()],
@@ -347,7 +360,7 @@ class Flowsheet:
                 raise ValueError("Unsupported flowsheet document; expected version 1, 2 or 3 and a name")
             if not isinstance(document.get("equipment"), list) or not isinstance(document.get("connections"), list):
                 raise ValueError("Equipment and connections must be lists")
-            sheet = cls(document["name"])
+            sheet = cls(document["name"], temperature_c=document.get("temperature_c", 21.0))
             for value in document["equipment"]:
                 fields = dict(value)
                 kind = fields["kind"]

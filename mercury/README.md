@@ -60,6 +60,11 @@ downloads or package installation occur at application startup.
 - Select a block to edit its inputs, then **Apply changes**. Run, Validate, and
   Save also apply pending edits to the selected object. Changing simulation inputs
   clears old results. Moving blocks changes only layout and keeps valid results.
+- Set **Assumed temperature (°C)** above the diagram, then click **Apply
+  temperature** or press Enter. Any finite value above −273.15 °C is accepted,
+  including decimals such as 21.5. Run, Validate, and Save also apply this input.
+  It sets every stream's assumed temperature and the inlet temperature used for
+  ideal compressor power. The default is 21 °C; the setting is saved per flowsheet.
 - Select a stream to rename it or inspect temperature, pressure (psia/psig), flow
   (slpm), and O₂ composition (mole fraction and percentage). The four **Stream
   labels** checkboxes independently show/hide temperature, pressure, flow, and O₂
@@ -68,9 +73,10 @@ downloads or package installation occur at application startup.
   **bow-tie = flow**, and **rectangle = O₂ mole fraction**. Each stream name appears
   once below its badges; long names are shortened on the diagram and remain fully
   available in Properties. Before Run, uncalculated values show “—”; temperature
-  shows `21`. Pressure uses two decimals, flow whole slpm, and O₂ four decimals.
+  shows the selected assumption. Pressure uses two decimals, flow whole slpm,
+  and O₂ four decimals.
 - The **draggable stream legend** explains °C, psia, slpm, and O₂ mol/mol, including
-  the 21 °C assumption. Its saved position starts above the default network;
+  the selected temperature assumption. Its saved position starts above the default network;
   right-click it for **Reset legend position**. Fit diagram includes the legend.
   A small warning triangle marks a product specification failure. Detailed outlet
   roles, units, assumptions, and specification results remain in Properties and
@@ -124,7 +130,7 @@ downloads or package installation occur at application startup.
   their property snapshots when a custom preset is changed.
 - **Open**, **Save**, and **Save as** use versioned JSON. Equipment, full property
   snapshots, positions, box sizes, label offsets, stream bends, terminal endpoints,
-  connections, outlet roles, formatted textboxes, and the legend position are
+  connections, outlet roles, formatted textboxes, temperature assumption, and the legend position are
   saved in **version 3**. Versions 1 and 2 load with no textboxes and a default
   legend position, preserving the existing diagram layout. Version 1 files load
   automatically: connected product/vent boxes become terminal arrows with their
@@ -134,6 +140,7 @@ downloads or package installation occur at application startup.
   results are never saved as authoritative inputs. Structurally valid unfinished
   designs may be saved and reopened; missing connections or cycles are then shown
   by validation. Malformed files do not replace the current workspace.
+  Files without a temperature setting load with the 21 °C default.
 
 Keyboard shortcuts: **Ctrl+R** run, **Ctrl+S** save, **Ctrl+O** open.
 
@@ -182,12 +189,14 @@ saved flowsheets retain their own property snapshots.
 
 Key assumptions:
 
-- Every displayed stream temperature is **21 °C, assumed**, exposed by
-  `Stream.temperature_c`. No temperature solver, thermal mixing, or compressor
-  heat balance is implied. This display assumption does not change the existing
-  ideal-power model's 298.15 K inlet-temperature basis below.
+- Every stream uses the user-defined **assumed temperature** (default 21 °C),
+  exposed by `Flowsheet.temperature_c` and `Stream.temperature_c`. No temperature
+  solver, thermal mixing, or compressor heat balance is implied. Membrane
+  permeance, flow, and composition equations do not depend on this setting.
 - Standard flow is slpm throughout; the ideal-power calculation retains the
-  existing 22.414 L/mol basis, inlet temperature 298.15 K, and gamma 1.4. Reported
+  existing 22.414 L/mol basis and gamma 1.4. Its inlet temperature is the chosen
+  Celsius assumption plus 273.15 K. Setting 25 °C reproduces the previous
+  298.15 K power basis. Reported
   power is ideal isentropic power, not actual motor power. No energy balance is
   introduced for compressor outlet temperature.
 - Internal pressure is **psia**. The editor shows the corresponding psig using
@@ -223,6 +232,7 @@ from mercury.simulation import CompressorMap, PresetStore, default_flowsheet
 
 curves = CompressorMap()
 sheet = default_flowsheet(PresetStore())
+sheet.temperature_c = 25.0
 issues = sheet.validate(curves)
 result = sheet.simulate(curves)
 for product in result.products.values():
@@ -260,7 +270,7 @@ The current default produces approximately:
 | Oxygen-product O₂ | 41.9026% |
 | Nitrogen-product flow | 6558.1841 slpm |
 | Nitrogen-product O₂ | 4.8155% |
-| Ideal compressor power | 94.5508 kW |
+| Ideal compressor power (21 °C) | 93.2823 kW |
 | New-module stage cut | 0.12913, advisory warning |
 
 ## Tests
